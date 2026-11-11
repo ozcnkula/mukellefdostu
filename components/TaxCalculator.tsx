@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Calculator, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calculator, Copy, MessageCircle, ShieldCheck } from "lucide-react";
+import { useSite } from "@/components/SiteProvider";
 
 const BRACKETS = [
   { limit: 190_000, rate: 0.15 },
@@ -61,13 +62,84 @@ function tl(amount: number) {
   return `${Math.round(amount).toLocaleString("tr-TR")} TL`;
 }
 
+function readShareParams() {
+  const params = new URLSearchParams(window.location.search);
+  const kar = Number(params.get("kar"));
+  const mod = params.get("mod");
+  return {
+    profit: Number.isFinite(kar) && kar >= 250_000 && kar <= 8_000_000 ? kar : null,
+    distribute: mod === "dagitim" ? true : mod === "sirket" ? false : null,
+  };
+}
+
 export default function TaxCalculator() {
+  const { setSimulator } = useSite();
   const [profit, setProfit] = useState(1_000_000);
   const [distribute, setDistribute] = useState(false);
+  const [used, setUsed] = useState(false);
+  const [notice, setNotice] = useState("");
   const result = compare(profit);
   const ltdNet = distribute ? result.distributed : result.retained;
   const soleWins = result.soleNet >= ltdNet;
   const gap = Math.abs(result.soleNet - ltdNet);
+  const winnerName = soleWins ? "Şahıs şirketi" : "Limited şirket";
+  const senaryo = soleWins ? "sahis" : "ltd";
+
+  useEffect(() => {
+    const params = readShareParams();
+    if (params.profit !== null) setProfit(params.profit);
+    if (params.distribute !== null) setDistribute(params.distribute);
+    if (params.profit !== null || params.distribute !== null) setUsed(true);
+  }, []);
+
+  useEffect(() => {
+    if (!used) return;
+    setSimulator({
+      profit,
+      distribute,
+      soleNet: result.soleNet,
+      ltdNet,
+      winner: senaryo,
+    });
+  }, [used, profit, distribute, result.soleNet, ltdNet, senaryo, setSimulator]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 4500);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const shareLink = `https://mukellefdostu.com/?kar=${profit}&senaryo=${senaryo}&mod=${distribute ? "dagitim" : "sirket"}`;
+
+  const rememberShare = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("kar", String(profit));
+    url.searchParams.set("senaryo", senaryo);
+    url.searchParams.set("mod", distribute ? "dagitim" : "sirket");
+    window.history.replaceState(null, "", url);
+    setUsed(true);
+    setNotice("Paylaşıldı! İstersen AI asistanla sonucu yorumlayabilirsin.");
+  };
+
+  const shareWhatsApp = () => {
+    const message = `2026 Şahıs vs Ltd vergi karşılaştırması yaptım. Yıllık ${profit.toLocaleString("tr-TR")} TL kârda ${winnerName} daha avantajlı görünüyor. Detaylar için: https://mukellefdostu.com`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    rememberShare();
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+    } catch {
+      const field = document.createElement("textarea");
+      field.value = shareLink;
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    rememberShare();
+  };
 
   return (
     <div id="hesaplayici" className="scroll-mt-24 bg-slate-900 border border-slate-800 rounded-2xl p-8 my-8">
@@ -96,7 +168,10 @@ export default function TaxCalculator() {
             step={50_000}
             value={profit}
             aria-label="Yıllık vergi öncesi kâr"
-            onChange={(event) => setProfit(Number(event.target.value))}
+            onChange={(event) => {
+              setUsed(true);
+              setProfit(Number(event.target.value));
+            }}
             className="w-full accent-blue-600 bg-slate-950 cursor-pointer"
           />
           <div className="mt-3 flex flex-wrap gap-2">
@@ -117,7 +192,10 @@ export default function TaxCalculator() {
         <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-950 p-1 border border-slate-800">
           <button
             type="button"
-            onClick={() => setDistribute(false)}
+            onClick={() => {
+              setUsed(true);
+              setDistribute(false);
+            }}
             className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
               distribute ? "text-slate-400 hover:text-slate-200" : "bg-indigo-600 text-white"
             }`}
@@ -126,7 +204,10 @@ export default function TaxCalculator() {
           </button>
           <button
             type="button"
-            onClick={() => setDistribute(true)}
+            onClick={() => {
+              setUsed(true);
+              setDistribute(true);
+            }}
             className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
               distribute ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
             }`}
@@ -174,6 +255,28 @@ export default function TaxCalculator() {
               : "Kâr şirkette bırakılırsa kâr payı vergisi doğmaz. Şahıs tarafında aynı kâr, Bağ-Kur ve örnek idari gider düşüldükten sonra artan oranlı gelir vergisine girer."}
           </span>
         </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={shareWhatsApp}
+            className="flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-500"
+          >
+            <MessageCircle className="h-4 w-4" /> WhatsApp’ta Paylaş
+          </button>
+          <button
+            type="button"
+            onClick={copyLink}
+            className="flex items-center justify-center gap-2 rounded-lg border border-blue-700 bg-blue-950/40 px-4 py-2.5 text-sm font-semibold text-blue-100 transition hover:border-teal-500"
+          >
+            <Copy className="h-4 w-4" /> Linki Kopyala
+          </button>
+        </div>
+        {notice ? (
+          <p role="status" className="rounded-lg border border-teal-800 bg-teal-950/40 px-3 py-2 text-sm text-teal-100">
+            {notice}
+          </p>
+        ) : null}
 
         <p className="text-[11px] leading-relaxed text-slate-500">
           Simülasyondur, bağlayıcı vergi hesabı değildir. Şahıs tarafında 2026 ücret dışı gelir tarifesi kullanılır

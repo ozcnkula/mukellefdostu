@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import TaxCalculator from "@/components/TaxCalculator";
+import { PROFILE_LABELS, useSite, type ProfileId } from "@/components/SiteProvider";
 import AiAssistant from "@/components/AiAssistant";
 import LegalConsulting from "@/components/LegalConsulting";
 import {
@@ -19,25 +20,25 @@ import {
   Sparkles,
 } from "lucide-react";
 
-const PROFILES = [
+const PROFILES: { id: ProfileId; icon: React.ReactNode; desc: string }[] = [
   {
+    id: "yeni-girisimci",
     icon: <Building2 className="w-6 h-6 text-blue-400" />,
-    title: "Yeni Girişimci",
     desc: "Şirket kurma, basit usul vs. bilanço hesabı ve kuruluş maliyetleri rehberi.",
   },
   {
+    id: "e-ticaret",
     icon: <ShoppingCart className="w-6 h-6 text-indigo-400" />,
-    title: "E-Ticaret Satıcısı",
     desc: "Trendyol, Hepsiburada pazaryeri entegrasyonu ve e-Fatura zorunlulukları.",
   },
   {
+    id: "freelancer",
     icon: <Laptop className="w-6 h-6 text-teal-400" />,
-    title: "Freelancer & Yazılımcı",
     desc: "Yurt dışı yazılım/tasarım ihracatı ve %80 kazanç istisnası yönetimi.",
   },
   {
+    id: "mikro-ihracat",
     icon: <Briefcase className="w-6 h-6 text-purple-400" />,
-    title: "Mikro İhracatçı",
     desc: "ETGB düzenlemeleri, KDV iadesi ve kargo beyanname süreçleri.",
   },
 ];
@@ -120,10 +121,11 @@ export default function Home() {
 
       <section className="border-t border-slate-800">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="mb-8 text-center text-xl font-bold text-slate-200">Profilinizi Seçin</h2>
+          <h2 className="mb-2 text-center text-xl font-bold text-slate-200">Profilinizi Seçin</h2>
+          <p className="mb-8 text-center text-sm text-slate-400">Seçiminiz sağ alttaki AI asistana bağlam olarak iletilir.</p>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {PROFILES.map((profile) => (
-              <ProfileCard key={profile.title} icon={profile.icon} title={profile.title} desc={profile.desc} />
+              <ProfileCard key={profile.id} id={profile.id} icon={profile.icon} desc={profile.desc} />
             ))}
           </div>
         </div>
@@ -216,12 +218,22 @@ export default function Home() {
   );
 }
 
-function ProfileCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function ProfileCard({ id, icon, desc }: { id: ProfileId; icon: React.ReactNode; desc: string }) {
+  const { profileId, setProfileId } = useSite();
+  const selected = profileId === id;
+
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-5 transition hover:border-slate-700">
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={() => setProfileId(selected ? null : id)}
+      className={`rounded-xl border bg-slate-900 p-5 text-left transition ${
+        selected ? "border-teal-500 ring-1 ring-teal-500/60" : "border-slate-800 hover:border-slate-700"
+      }`}
+    >
       <div className="mb-3">{icon}</div>
-      <h3 className="mb-1 font-semibold text-slate-200">{title}</h3>
+      <h3 className="mb-1 font-semibold text-slate-200">{PROFILE_LABELS[id]}</h3>
       <p className="text-xs leading-relaxed text-slate-400">{desc}</p>
-    </div>
+    </button>
   );
 }
