@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
+import { isLeadTopic } from '@/lib/lead-topics';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone } = body;
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
+    const topic = body.topic;
+
+    if (!name || !phone || !isLeadTopic(topic)) {
+      return NextResponse.json({ success: false, error: "Ad, telefon ve konu gerekli." }, { status: 400 });
+    }
 
     const GOOGLE_SHEET_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 
@@ -11,7 +18,7 @@ export async function POST(request: Request) {
       await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, date: new Date().toISOString() }),
+        body: JSON.stringify({ name, phone, topic, date: new Date().toISOString() }),
       });
     }
 

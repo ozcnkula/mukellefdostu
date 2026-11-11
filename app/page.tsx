@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import TaxCalculator from "@/components/TaxCalculator";
 import { PROFILE_LABELS, useSite, type ProfileId } from "@/components/SiteProvider";
+import { LEAD_TOPICS } from "@/lib/lead-topics";
 import AiAssistant from "@/components/AiAssistant";
 import LegalConsulting from "@/components/LegalConsulting";
 import {
@@ -16,9 +17,21 @@ import {
   BookOpen,
   AlertTriangle,
   CheckCircle2,
+  FileDown,
   Send,
   Sparkles,
 } from "lucide-react";
+
+const CHECKLIST_HREF = "/2026-e-ticaret-vergi-checklist.pdf";
+
+function downloadChecklist() {
+  const link = document.createElement("a");
+  link.href = CHECKLIST_HREF;
+  link.download = "2026-e-ticaret-vergi-checklist.pdf";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
 
 const PROFILES: { id: ProfileId; icon: React.ReactNode; desc: string }[] = [
   {
@@ -46,7 +59,7 @@ const PROFILES: { id: ProfileId; icon: React.ReactNode; desc: string }[] = [
 export default function Home() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [leadError, setLeadError] = useState("");
-  const [leadData, setLeadData] = useState({ name: "", email: "", phone: "", note: "" });
+  const [leadData, setLeadData] = useState({ name: "", phone: "", topic: "" });
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +78,7 @@ export default function Home() {
       }
 
       setLeadSubmitted(true);
+      downloadChecklist();
     } catch (err) {
       console.error(err);
       setLeadError("Talep gönderilemedi. Lütfen tekrar deneyin.");
@@ -116,6 +130,9 @@ export default function Home() {
           <a href="/rehber" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-500/50">
             <BookOpen className="h-4 w-4 text-amber-400" /> Bilgi Merkezi
           </a>
+          <a href="#lead-form" className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-500">
+            <FileDown className="h-4 w-4" /> Ücretsiz 2026 Checklist İndir
+          </a>
         </div>
       </section>
 
@@ -158,13 +175,26 @@ export default function Home() {
             </p>
           </aside>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
-            <h2 className="mb-2 text-2xl font-bold text-white">Uzman Danışmanlığı İsteyin</h2>
-            <p className="mb-6 text-sm text-slate-400">Mali süreçlerinizi ve entegrasyonlarınızı uzman partner ağımızla çözelim.</p>
+            <h2 className="mb-2 text-2xl font-bold text-white">Ücretsiz bilgi alın</h2>
+            <p className="mb-6 text-sm text-slate-400">Adınızı ve telefonunuzu bırakın. 2026 checklist dosyası hemen iner, biz de sizi ararız.</p>
 
             {leadSubmitted ? (
-              <div className="flex items-center gap-3 rounded-xl border border-emerald-800 bg-emerald-950/50 p-4 text-emerald-400">
-                <CheckCircle2 className="h-6 w-6 shrink-0" />
-                <span>Talebiniz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.</span>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 rounded-xl border border-emerald-800 bg-emerald-950/50 p-4 text-emerald-300">
+                  <CheckCircle2 className="h-6 w-6 shrink-0" />
+                  <p>Teşekkürler. Bilgilerinizi aldık. En kısa sürede sizi arayacağız.</p>
+                </div>
+                <div className="rounded-xl border border-teal-800 bg-teal-950/40 p-4 text-sm text-teal-100">
+                  <p className="font-semibold">Checklist’inizi indirdiniz mi?</p>
+                  <p className="mt-1 text-teal-200/90">İnmediyse buradan tekrar alabilirsiniz.</p>
+                  <a
+                    href={CHECKLIST_HREF}
+                    download="2026-e-ticaret-vergi-checklist.pdf"
+                    className="mt-3 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-500"
+                  >
+                    <FileDown className="h-4 w-4" /> 2026 E-Ticaret & Vergi Checklist
+                  </a>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleLeadSubmit} className="space-y-4">
@@ -174,20 +204,10 @@ export default function Home() {
                     id="lead-name"
                     required
                     type="text"
+                    autoComplete="name"
                     className="w-full rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
                     value={leadData.name}
                     onChange={(e) => setLeadData({ ...leadData, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lead-email" className="mb-1 block text-xs font-medium text-slate-400">E-Posta Adresi</label>
-                  <input
-                    id="lead-email"
-                    required
-                    type="email"
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
-                    value={leadData.email}
-                    onChange={(e) => setLeadData({ ...leadData, email: e.target.value })}
                   />
                 </div>
                 <div>
@@ -196,14 +216,30 @@ export default function Home() {
                     id="lead-phone"
                     required
                     type="tel"
+                    autoComplete="tel"
                     className="w-full rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
                     value={leadData.phone}
                     onChange={(e) => setLeadData({ ...leadData, phone: e.target.value })}
                   />
                 </div>
+                <div>
+                  <label htmlFor="lead-topic" className="mb-1 block text-xs font-medium text-slate-400">Ne istiyorsun?</label>
+                  <select
+                    id="lead-topic"
+                    required
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    value={leadData.topic}
+                    onChange={(e) => setLeadData({ ...leadData, topic: e.target.value })}
+                  >
+                    <option value="">Seçin</option>
+                    {LEAD_TOPICS.map((topic) => (
+                      <option key={topic} value={topic}>{topic}</option>
+                    ))}
+                  </select>
+                </div>
                 {leadError ? <p className="text-sm text-red-400">{leadError}</p> : null}
                 <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500">
-                  <Send className="h-4 w-4" /> Talep Gönder
+                  <Send className="h-4 w-4" /> Ücretsiz Bilgi Al
                 </button>
               </form>
             )}
