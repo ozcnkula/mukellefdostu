@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Bot, Send, Sparkles } from "lucide-react";
+import { trackEvent } from "@/lib/track";
 
 const FAQ_DATABASE = [
   { keywords: ["limit", "fatura", "kağıt", "3000"], answer: "2026 yılı itibarıyla GİB düzenlemelerine göre kağıt/koçan fatura kesme sınırı 3.000 TL'dir. Bu tutarı aşan satışlarda e-arşiv veya e-fatura zorunludur." },
@@ -15,6 +16,8 @@ export default function AiAssistant() {
 
   const handleAsk = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!query.trim()) return;
+    trackEvent("ai");
     const found = FAQ_DATABASE.find(item => item.keywords.some(k => query.toLowerCase().includes(k)));
     if (found) {
       setResponse(found.answer);

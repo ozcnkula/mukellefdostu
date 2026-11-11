@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import TaxCalculator from "@/components/TaxCalculator";
 import { PROFILE_LABELS, useSite, type ProfileId } from "@/components/SiteProvider";
 import { LEAD_TOPICS } from "@/lib/lead-topics";
+import { trackEvent } from "@/lib/track";
 import AiAssistant from "@/components/AiAssistant";
 import LegalConsulting from "@/components/LegalConsulting";
 import {
@@ -25,6 +26,7 @@ import {
 const CHECKLIST_HREF = "/2026-e-ticaret-vergi-checklist.pdf";
 
 function downloadChecklist() {
+  trackEvent("checklist");
   const link = document.createElement("a");
   link.href = CHECKLIST_HREF;
   link.download = "2026-e-ticaret-vergi-checklist.pdf";
@@ -190,6 +192,7 @@ export default function Home() {
                   <a
                     href={CHECKLIST_HREF}
                     download="2026-e-ticaret-vergi-checklist.pdf"
+                    onClick={() => trackEvent("checklist")}
                     className="mt-3 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-500"
                   >
                     <FileDown className="h-4 w-4" /> 2026 E-Ticaret & Vergi Checklist

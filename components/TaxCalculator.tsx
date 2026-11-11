@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Calculator, Copy, MessageCircle, ShieldCheck } from "lucide-react";
 import { useSite } from "@/components/SiteProvider";
+import { trackEvent } from "@/lib/track";
 
 const BRACKETS = [
   { limit: 190_000, rate: 0.15 },
@@ -77,6 +78,7 @@ export default function TaxCalculator() {
   const [profit, setProfit] = useState(1_000_000);
   const [distribute, setDistribute] = useState(false);
   const [used, setUsed] = useState(false);
+  const reportedUse = useRef(false);
   const [notice, setNotice] = useState("");
   const result = compare(profit);
   const ltdNet = distribute ? result.distributed : result.retained;
@@ -91,6 +93,12 @@ export default function TaxCalculator() {
     if (params.distribute !== null) setDistribute(params.distribute);
     if (params.profit !== null || params.distribute !== null) setUsed(true);
   }, []);
+
+  useEffect(() => {
+    if (!used || reportedUse.current) return;
+    reportedUse.current = true;
+    trackEvent("simulator");
+  }, [used]);
 
   useEffect(() => {
     if (!used) return;

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Bot, MessageCircle, Send, X } from "lucide-react";
 import { PROFILE_LABELS, useSite, type SimulatorSnapshot } from "@/components/SiteProvider";
+import { trackEvent } from "@/lib/track";
 
 const GREETING = "Merhaba, 2026 e-fatura veya vergi konusunda sorunuz var mı?";
 
@@ -94,6 +95,7 @@ export default function FloatingAssistant() {
   const ask = (question: string) => {
     const trimmed = question.trim();
     if (!trimmed) return;
+    trackEvent("ai");
     const profileLabel = profileId ? PROFILE_LABELS[profileId] : null;
     setMessages((current) => [
       ...current,

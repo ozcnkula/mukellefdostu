@@ -12,14 +12,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Ad, telefon ve konu gerekli." }, { status: 400 });
     }
 
-    const GOOGLE_SHEET_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    if (!webhookUrl) {
+      return NextResponse.json({ success: false, error: "Bir hata oluştu." }, { status: 500 });
+    }
 
-    if (GOOGLE_SHEET_WEBHOOK_URL) {
-      await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, topic, date: new Date().toISOString() }),
-      });
+    const tarih = new Intl.DateTimeFormat("tr-TR", {
+      timeZone: "Europe/Istanbul",
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date());
+
+    const sheetResponse = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "Ad Soyad": name,
+        "Telefon": phone,
+        "Ne istiyor": topic,
+        "Tarih": tarih,
+      }),
+    });
+
+    if (!sheetResponse.ok) {
+      return NextResponse.json({ success: false, error: "Bir hata oluştu." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, message: "Lead kaydedildi." });
