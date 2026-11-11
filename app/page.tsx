@@ -12,6 +12,7 @@ import {
   Calculator,
   Bot,
   Scale,
+  BookOpen,
   AlertTriangle,
   CheckCircle2,
   Send,
@@ -79,9 +80,14 @@ export default function Home() {
               mukellefdostu<span className="text-blue-500">.com</span>
             </span>
           </a>
-          <a href="#lead-form" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500">
-            Ücretsiz Danışmanlık
-          </a>
+          <div className="flex items-center gap-3">
+            <a href="/rehber" className="hidden items-center gap-2 text-sm font-medium text-slate-300 transition hover:text-white sm:flex">
+              <BookOpen className="h-4 w-4 text-amber-400" /> Bilgi Merkezi
+            </a>
+            <a href="#lead-form" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500">
+              Ücretsiz Danışmanlık
+            </a>
+          </div>
         </div>
       </header>
 
@@ -105,6 +111,9 @@ export default function Home() {
           </a>
           <a href="#hukuk-danismanligi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
             <Scale className="h-4 w-4 text-indigo-400" /> Hukuk & Uyum
+          </a>
+          <a href="/rehber" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-500/50">
+            <BookOpen className="h-4 w-4 text-amber-400" /> Bilgi Merkezi
           </a>
         </div>
       </section>
