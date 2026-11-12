@@ -1,53 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
-import { Bot, Send, Sparkles } from "lucide-react";
+import { FormEvent, useState } from "react";
+import { Bot, Send } from "lucide-react";
+import { AssistantReplyBody } from "@/components/AssistantReplyBody";
+import { PROFILE_LABELS, useSite } from "@/components/SiteProvider";
+import { answerQuestion, type AssistantReply } from "@/lib/assistant";
 import { trackEvent } from "@/lib/track";
 
-const FAQ_DATABASE = [
-  { keywords: ["limit", "fatura", "kağıt", "3000"], answer: "2026 yılı itibarıyla GİB düzenlemelerine göre kağıt/koçan fatura kesme sınırı 3.000 TL'dir. Bu tutarı aşan satışlarda e-arşiv veya e-fatura zorunludur." },
-  { keywords: ["e-ticaret", "trendyol", "pazaryeri", "komisyon"], answer: "Pazaryeri satışlarında komisyon faturaları gider olarak gösterilebilir. KDV tevkifatı ve e-fatura entegrasyonu zorunludur." },
-  { keywords: ["yurtdışı", "freelancer", "yazılım", "istisna"], answer: "Yurt dışına verilen yazılım, tasarım ve mühendislik hizmetlerinde döviz olarak gelen kazançlarda %80 gelir vergisi istisnası uygulanabilmektedir." }
-];
+const INTRO =
+  "Bilgi merkezindeki şirket, vergi ve SGK notlarından sorun. Yanıt, ilgili yazıya bağlanır.";
 
 export default function AiAssistant() {
+  const { profileId, simulator } = useSite();
   const [query, setQuery] = useState("");
-  const [response, setResponse] = useState("2026 e-fatura limitleri, şirket kuruluş maliyetleri veya e-ticaret vergileri hakkında dilediğinizi sorun.");
+  const [reply, setReply] = useState<AssistantReply | null>(null);
 
-  const handleAsk = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleAsk = (event: FormEvent) => {
+    event.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) return;
     trackEvent("ai");
-    const found = FAQ_DATABASE.find(item => item.keywords.some(k => query.toLowerCase().includes(k)));
-    if (found) {
-      setResponse(found.answer);
-    } else {
-      setResponse("2026 mali mevzuatına göre bu soruyla ilgili uzman danışmanlarımız detaylı inceleme yapmaktadır. Sayfanın altındaki formdan talep oluşturabilirsiniz.");
-    }
+    const profileLabel = profileId ? PROFILE_LABELS[profileId] : null;
+    setReply(answerQuestion(trimmed, profileLabel, simulator));
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-      <div className="flex items-center gap-3 mb-4 border-b border-slate-800 pb-4">
-        <Bot className="w-6 h-6 text-blue-400" />
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+      <div className="mb-4 flex items-center gap-3 border-b border-slate-800 pb-4">
+        <Bot className="h-6 w-6 text-blue-400" />
         <div>
           <h3 className="font-semibold text-white">2026 AI Mali Asistan</h3>
-          <p className="text-xs text-slate-400">GİB ve Vergi Mevzuatı Asistanı</p>
+          <p className="text-xs text-slate-400">Bilgi merkezi yanıtları</p>
         </div>
       </div>
-      <div className="bg-slate-950 rounded-xl p-4 mb-4 text-sm text-slate-300 min-h-[90px] border border-slate-800/60">
-        <p className="text-slate-200">💡 {response}</p>
+      <div
+        aria-live="polite"
+        className="mb-4 min-h-[90px] rounded-xl border border-slate-800/60 bg-slate-950 p-4 text-sm leading-relaxed text-slate-200"
+      >
+        {reply ? <AssistantReplyBody reply={reply} /> : <p>{INTRO}</p>}
       </div>
       <form onSubmit={handleAsk} className="flex gap-2">
-        <input 
-          type="text" 
-          placeholder="Örn: Kağıt fatura sınırı kaç TL?" 
+        <input
+          type="text"
+          placeholder="Örn: KDV beyannamesi ne zaman?"
+          aria-label="Bilgi merkezine soru"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+          onChange={(event) => setQuery(event.target.value)}
+          className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-4 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
         />
-        <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5">
-          <Send className="w-4 h-4" /> Sor
+        <button
+          type="submit"
+          className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
+        >
+          <Send className="h-4 w-4" /> Sor
         </button>
       </form>
     </div>

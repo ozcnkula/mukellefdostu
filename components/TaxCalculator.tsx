@@ -88,10 +88,14 @@ export default function TaxCalculator() {
   const senaryo = soleWins ? "sahis" : "ltd";
 
   useEffect(() => {
-    const params = readShareParams();
-    if (params.profit !== null) setProfit(params.profit);
-    if (params.distribute !== null) setDistribute(params.distribute);
-    if (params.profit !== null || params.distribute !== null) setUsed(true);
+    // Shared links arrive after hydration; defer so this effect does not set state synchronously.
+    const timer = window.setTimeout(() => {
+      const params = readShareParams();
+      if (params.profit !== null) setProfit(params.profit);
+      if (params.distribute !== null) setDistribute(params.distribute);
+      if (params.profit !== null || params.distribute !== null) setUsed(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
