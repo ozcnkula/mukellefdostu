@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -34,10 +34,51 @@ function matches(article: Article, category: Category, query: string) {
   return haystack.includes(query.toLocaleLowerCase("tr"));
 }
 
+function articleSlugFromHash() {
+  const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+  return findArticle(hash)?.article.slug ?? null;
+}
+
 export default function RehberPage() {
   const [query, setQuery] = useState("");
   const [slug, setSlug] = useState<string | null>(null);
   const selected = slug ? findArticle(slug) : undefined;
+
+  useEffect(() => {
+    const apply = () => setSlug(articleSlugFromHash());
+    apply();
+    window.addEventListener("hashchange", apply);
+    window.addEventListener("popstate", apply);
+    return () => {
+      window.removeEventListener("hashchange", apply);
+      window.removeEventListener("popstate", apply);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (slug) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (!hash || findArticle(hash)) return;
+    document.getElementById(hash)?.scrollIntoView();
+  }, [slug]);
+
+  const openArticle = (next: string) => {
+    const nextHash = `#${next}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}${nextHash}`);
+    }
+    setSlug(next);
+  };
+
+  const closeArticle = () => {
+    if (window.location.hash) {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}`);
+    }
+    setSlug(null);
+  };
 
   const visible = useMemo(
     () =>
@@ -56,7 +97,7 @@ export default function RehberPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5">
           <button
             type="button"
-            onClick={() => setSlug(null)}
+            onClick={closeArticle}
             className="flex items-center gap-3"
           >
             <span className="grid size-9 place-items-center rounded-md bg-amber-500 font-serif text-base font-semibold text-slate-950">
@@ -87,14 +128,14 @@ export default function RehberPage() {
           <ArticleView
             category={selected.category}
             article={selected.article}
-            onBack={() => setSlug(null)}
+            onBack={closeArticle}
           />
         ) : (
           <Catalog
             query={query}
             onQuery={setQuery}
             groups={visible}
-            onOpen={setSlug}
+            onOpen={openArticle}
           />
         )}
       </main>
@@ -220,7 +261,7 @@ function ArticleView({
   onBack: () => void;
 }) {
   return (
-    <article className="mx-auto max-w-3xl">
+    <article id={article.slug} className="mx-auto max-w-3xl scroll-mt-24">
       <button
         type="button"
         onClick={onBack}
