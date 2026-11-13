@@ -13,7 +13,7 @@ export const PROFILE_LABELS: Record<ProfileId, string> = {
 
 export type SimulatorSnapshot = {
   profit: number;
-  distribute: boolean;
+  distribution: number;
   soleNet: number;
   ltdNet: number;
   winner: "sahis" | "ltd";

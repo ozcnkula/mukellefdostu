@@ -22,7 +22,12 @@ function tl(amount: number) {
 
 function simulatorSentence(simulator: SimulatorSnapshot) {
   const winner = simulator.winner === "sahis" ? "şahıs şirketi" : "limited şirket";
-  const mode = simulator.distribute ? "kârın tamamı dağıtılırsa" : "kâr şirkette kalırsa";
+  const mode =
+    simulator.distribution <= 0
+      ? "kâr şirkette kalırsa"
+      : simulator.distribution >= 100
+        ? "kârın tamamı dağıtılırsa"
+        : `kârın %${simulator.distribution}’i dağıtılırsa`;
   return `Simülatörde yıllık ${tl(simulator.profit)} vergi öncesi kâr ve “${mode}” seçili. Şahıs neti ${tl(simulator.soleNet)}, limited neti ${tl(simulator.ltdNet)}. Bu seçimde ${winner} daha avantajlı görünüyor.`;
 }
 

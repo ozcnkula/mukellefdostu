@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Calculator, Copy, MessageCircle, ShieldCheck } from "lucide-react";
 import { useSite } from "@/components/SiteProvider";
 import { trackEvent } from "@/lib/track";
@@ -40,7 +40,13 @@ function round(amount: number) {
   return Math.round(amount);
 }
 
-function compare(profit: number) {
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+function compare(profit: number, distribution: number) {
+  const ratio = clamp(distribution, 0, 100) / 100;
   const bagkur = round(BAGKUR_ANNUAL);
   const soleBase = Math.max(0, profit - bagkur - SOLE_ADMIN);
   const soleTax = round(incomeTax(soleBase));
@@ -48,50 +54,144 @@ function compare(profit: number) {
 
   const ltdBase = Math.max(0, profit - LTD_ADMIN);
   const corporateTax = round(ltdBase * CORPORATE_RATE);
-  const grossDividend = ltdBase - corporateTax;
-  const filesReturn = grossDividend / 2 > DIVIDEND_FILING_LIMIT;
-  const dividendTax = filesReturn
-    ? round(incomeTax(grossDividend / 2))
-    : round(grossDividend * DIVIDEND_WHT);
-  const retained = profit - LTD_ADMIN - corporateTax - bagkur;
-  const distributed = retained - dividendTax;
+  const afterTax = ltdBase - corporateTax;
+  const distributedGross = round(afterTax * ratio);
+  const companyKeeps = afterTax - distributedGross;
+  const withholding = round(distributedGross * DIVIDEND_WHT);
+  const taxableHalf = distributedGross / 2;
+  const filesReturn = taxableHalf > DIVIDEND_FILING_LIMIT;
+  const assessed = filesReturn ? round(incomeTax(taxableHalf)) : 0;
+  const extraTax = filesReturn ? Math.max(0, assessed - withholding) : 0;
+  const dividendTax = withholding + extraTax;
+  const partnerCash = distributedGross - dividendTax - bagkur;
+  const ltdNet = companyKeeps + partnerCash;
 
-  return { bagkur, soleTax, soleNet, corporateTax, dividendTax, filesReturn, retained, distributed };
+  return {
+    bagkur,
+    soleTax,
+    soleNet,
+    corporateTax,
+    distributedGross,
+    companyKeeps,
+    withholding,
+    extraTax,
+    filesReturn,
+    dividendTax,
+    partnerCash,
+    ltdNet,
+  };
 }
 
 function tl(amount: number) {
   return `${Math.round(amount).toLocaleString("tr-TR")} TL`;
 }
 
+function readAmount(params: URLSearchParams, key: string, max: number) {
+  const raw = params.get(key);
+  if (raw === null || raw === "") return null;
+  return clamp(Number(raw), 0, max);
+}
+
 function readShareParams() {
   const params = new URLSearchParams(window.location.search);
-  const kar = Number(params.get("kar"));
+  const dagitim = params.get("dagitim");
   const mod = params.get("mod");
-  return {
-    profit: Number.isFinite(kar) && kar >= 250_000 && kar <= 8_000_000 ? kar : null,
-    distribute: mod === "dagitim" ? true : mod === "sirket" ? false : null,
-  };
+  const distribution =
+    dagitim !== null && dagitim !== ""
+      ? clamp(Number(dagitim), 0, 100)
+      : mod === "dagitim"
+        ? 100
+        : mod === "sirket"
+          ? 0
+          : null;
+  const gelir = readAmount(params, "gelir", 12_000_000);
+  const kar = readAmount(params, "kar", 12_000_000);
+
+  if (gelir !== null) {
+    return {
+      revenue: gelir,
+      staff: readAmount(params, "personel", 3_000_000) ?? 0,
+      office: readAmount(params, "ofis", 3_000_000) ?? 0,
+      marketing: readAmount(params, "pazarlama", 3_000_000) ?? 0,
+      vehicle: readAmount(params, "arac", 3_000_000) ?? 0,
+      distribution,
+    };
+  }
+
+  if (kar !== null) {
+    return { revenue: kar, staff: 0, office: 0, marketing: 0, vehicle: 0, distribution };
+  }
+
+  return { revenue: null, staff: null, office: null, marketing: null, vehicle: null, distribution };
+}
+
+function MoneySlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 flex items-center justify-between gap-3 text-xs text-slate-400">
+        <span>{label}</span>
+        <span className="font-semibold text-slate-200">{tl(value)}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        aria-label={label}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full cursor-pointer accent-teal-500"
+      />
+    </label>
+  );
 }
 
 export default function TaxCalculator() {
   const { setSimulator } = useSite();
-  const [profit, setProfit] = useState(1_000_000);
-  const [distribute, setDistribute] = useState(false);
+  const [revenue, setRevenue] = useState(1_500_000);
+  const [staff, setStaff] = useState(300_000);
+  const [office, setOffice] = useState(100_000);
+  const [marketing, setMarketing] = useState(50_000);
+  const [vehicle, setVehicle] = useState(50_000);
+  const [distribution, setDistribution] = useState(0);
   const [used, setUsed] = useState(false);
   const reportedUse = useRef(false);
   const [notice, setNotice] = useState("");
-  const result = compare(profit);
-  const ltdNet = distribute ? result.distributed : result.retained;
-  const soleWins = result.soleNet >= ltdNet;
-  const gap = Math.abs(result.soleNet - ltdNet);
+  const [quote, setQuote] = useState({ name: "", phone: "", email: "" });
+  const [quoteState, setQuoteState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const expenses = staff + office + marketing + vehicle;
+  const profit = Math.max(0, revenue - expenses);
+  const result = compare(profit, distribution);
+  const soleWins = result.soleNet >= result.ltdNet;
+  const gap = Math.abs(result.soleNet - result.ltdNet);
   const winnerName = soleWins ? "Şahıs şirketi" : "Limited şirket";
   const senaryo = soleWins ? "sahis" : "ltd";
 
+  const markUsed = () => setUsed(true);
+
   useEffect(() => {
     const params = readShareParams();
-    if (params.profit !== null) setProfit(params.profit);
-    if (params.distribute !== null) setDistribute(params.distribute);
-    if (params.profit !== null || params.distribute !== null) setUsed(true);
+    if (params.revenue !== null) setRevenue(params.revenue);
+    if (params.staff !== null) setStaff(params.staff);
+    if (params.office !== null) setOffice(params.office);
+    if (params.marketing !== null) setMarketing(params.marketing);
+    if (params.vehicle !== null) setVehicle(params.vehicle);
+    if (params.distribution !== null) setDistribution(params.distribution);
+    if (params.revenue !== null || params.distribution !== null) setUsed(true);
   }, []);
 
   useEffect(() => {
@@ -104,12 +204,12 @@ export default function TaxCalculator() {
     if (!used) return;
     setSimulator({
       profit,
-      distribute,
+      distribution,
       soleNet: result.soleNet,
-      ltdNet,
+      ltdNet: result.ltdNet,
       winner: senaryo,
     });
-  }, [used, profit, distribute, result.soleNet, ltdNet, senaryo, setSimulator]);
+  }, [used, profit, distribution, result.soleNet, result.ltdNet, senaryo, setSimulator]);
 
   useEffect(() => {
     if (!notice) return;
@@ -117,13 +217,18 @@ export default function TaxCalculator() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const shareLink = `https://mukellefdostu.com/?kar=${profit}&senaryo=${senaryo}&mod=${distribute ? "dagitim" : "sirket"}`;
+  const shareLink = `https://mukellefdostu.com/?gelir=${revenue}&personel=${staff}&ofis=${office}&pazarlama=${marketing}&arac=${vehicle}&kar=${profit}&senaryo=${senaryo}&dagitim=${distribution}`;
 
   const rememberShare = () => {
     const url = new URL(window.location.href);
+    url.searchParams.set("gelir", String(revenue));
+    url.searchParams.set("personel", String(staff));
+    url.searchParams.set("ofis", String(office));
+    url.searchParams.set("pazarlama", String(marketing));
+    url.searchParams.set("arac", String(vehicle));
     url.searchParams.set("kar", String(profit));
     url.searchParams.set("senaryo", senaryo);
-    url.searchParams.set("mod", distribute ? "dagitim" : "sirket");
+    url.searchParams.set("dagitim", String(distribution));
     window.history.replaceState(null, "", url);
     setUsed(true);
     setNotice("Paylaşıldı! İstersen AI asistanla sonucu yorumlayabilirsin.");
@@ -149,84 +254,94 @@ export default function TaxCalculator() {
     rememberShare();
   };
 
+  const sendQuote = async (event: FormEvent) => {
+    event.preventDefault();
+    setQuoteState("sending");
+    setUsed(true);
+    try {
+      const response = await fetch("/api/teklif", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...quote,
+          profit,
+          advantage: gap,
+          distribution,
+          winner: senaryo,
+        }),
+      });
+      setQuoteState(response.ok ? "sent" : "error");
+    } catch {
+      setQuoteState("error");
+    }
+  };
+
   return (
-    <div id="hesaplayici" className="scroll-mt-24 bg-slate-900 border border-slate-800 rounded-2xl p-8 my-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center text-blue-400">
-          <Calculator className="w-5 h-5" />
+    <div id="hesaplayici" className="my-8 scroll-mt-24 rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-8">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
+          <Calculator className="h-5 w-5" />
         </div>
         <div>
           <h3 className="text-xl font-bold text-white">2026 Şahıs vs. Ltd. Vergi Simülatörü</h3>
-          <p className="text-xs text-slate-400">
-            Vergi öncesi yıllık kârı kaydırın. Hesap, 2026 gelir vergisi dilimlerini ve %25 kurumlar vergisini kullanır.
-          </p>
+          <p className="text-xs text-slate-400">Geliri ve gideri kaydırın. Vergi öncesi kâr kendiliğinden çıkar.</p>
         </div>
       </div>
 
       <div className="space-y-6">
+        <MoneySlider
+          label="Yıllık brüt gelir"
+          value={revenue}
+          min={0}
+          max={12_000_000}
+          step={50_000}
+          onChange={(value) => {
+            markUsed();
+            setRevenue(value);
+          }}
+        />
+
+        <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:grid-cols-2">
+          <MoneySlider label="Personel maliyetleri" value={staff} min={0} max={3_000_000} step={10_000} onChange={(value) => { markUsed(); setStaff(value); }} />
+          <MoneySlider label="Ofis kirası / giderleri" value={office} min={0} max={3_000_000} step={10_000} onChange={(value) => { markUsed(); setOffice(value); }} />
+          <MoneySlider label="Pazarlama / reklam" value={marketing} min={0} max={3_000_000} step={10_000} onChange={(value) => { markUsed(); setMarketing(value); }} />
+          <MoneySlider label="Araç / ulaşım" value={vehicle} min={0} max={3_000_000} step={10_000} onChange={(value) => { markUsed(); setVehicle(value); }} />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-teal-800 bg-teal-950/40 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-teal-100">Vergi öncesi kâr</p>
+            <p className="text-xs text-teal-200/80">
+              {expenses > revenue ? "Giderler geliri aşıyor, kâr sıfır kabul edildi." : "Brüt gelirden giderler düşüldü."}
+            </p>
+          </div>
+          <p className="text-lg font-extrabold text-white">{tl(profit)}</p>
+        </div>
+
         <div>
-          <div className="flex justify-between text-sm mb-2 gap-4">
-            <span className="text-slate-300">Yıllık vergi öncesi kâr</span>
-            <span className="text-blue-400 font-bold">{tl(profit)}</span>
+          <div className="mb-2 flex justify-between gap-4 text-sm">
+            <span className="text-slate-300">Limited kârının dağıtılan kısmı</span>
+            <span className="font-bold text-blue-400">%{distribution}</span>
           </div>
           <input
             type="range"
-            min={250_000}
-            max={8_000_000}
-            step={50_000}
-            value={profit}
-            aria-label="Yıllık vergi öncesi kâr"
+            min={0}
+            max={100}
+            step={5}
+            value={distribution}
+            aria-label="Dağıtılacak kâr oranı"
             onChange={(event) => {
-              setUsed(true);
-              setProfit(Number(event.target.value));
+              markUsed();
+              setDistribution(Number(event.target.value));
             }}
-            className="w-full accent-blue-600 bg-slate-950 cursor-pointer"
+            className="w-full cursor-pointer accent-blue-600"
           />
-          <div className="mt-3 flex flex-wrap gap-2">
-            {BRACKETS.slice(0, 4).map((bracket) => (
-              <span
-                key={bracket.limit}
-                className="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-[11px] text-slate-400"
-              >
-                {bracket.limit.toLocaleString("tr-TR")} TL’ye kadar %{bracket.rate * 100}
-              </span>
-            ))}
-            <span className="rounded-md border border-slate-800 bg-slate-950 px-2 py-1 text-[11px] text-slate-400">
-              Üzeri %40
-            </span>
-          </div>
+          <p className="mt-2 text-xs text-slate-500">%0 şirkette kalır. %100 ortağa dağıtılır. Ara oranlar ikisini birden gösterir.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-950 p-1 border border-slate-800">
-          <button
-            type="button"
-            onClick={() => {
-              setUsed(true);
-              setDistribute(false);
-            }}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-              distribute ? "text-slate-400 hover:text-slate-200" : "bg-indigo-600 text-white"
-            }`}
-          >
-            Kâr şirkette kalsın
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setUsed(true);
-              setDistribute(true);
-            }}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-              distribute ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Kârın tamamı dağıtılsın
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className={`rounded-xl border p-5 ${soleWins ? "border-blue-500/50 bg-blue-950/30" : "border-slate-800 bg-slate-950"}`}>
-            <span className="text-xs uppercase tracking-wider font-semibold text-slate-400">Şahıs şirketi net kazanç</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Şahıs şirketi net kazanç</span>
             <div className="mt-1 text-2xl font-extrabold text-white">{tl(result.soleNet)}</div>
             <dl className="mt-4 space-y-1.5 text-xs text-slate-400">
               <div className="flex justify-between gap-3"><dt>Bağ-Kur (asgari, indirimli)</dt><dd>{tl(result.bagkur)}</dd></div>
@@ -236,31 +351,29 @@ export default function TaxCalculator() {
           </div>
 
           <div className={`rounded-xl border p-5 ${soleWins ? "border-slate-800 bg-slate-950" : "border-indigo-500/50 bg-indigo-950/30"}`}>
-            <span className="text-xs uppercase tracking-wider font-semibold text-slate-400">
-              {distribute ? "Limited, ortağa dağıtılan net" : "Limited, şirkette kalan net"}
-            </span>
-            <div className="mt-1 text-2xl font-extrabold text-white">{tl(ltdNet)}</div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Limited, şirket + ortağın cebi</span>
+            <div className="mt-1 text-2xl font-extrabold text-white">{tl(result.ltdNet)}</div>
             <dl className="mt-4 space-y-1.5 text-xs text-slate-400">
               <div className="flex justify-between gap-3"><dt>Örnek muhasebe ve yasal gider</dt><dd>{tl(LTD_ADMIN)}</dd></div>
               <div className="flex justify-between gap-3"><dt>Kurumlar vergisi (%25)</dt><dd>{tl(result.corporateTax)}</dd></div>
-              <div className="flex justify-between gap-3">
-                <dt>{result.filesReturn ? "Kâr payı vergisi (beyan)" : "Kâr payı stopajı (%15)"}</dt>
-                <dd>{distribute ? tl(result.dividendTax) : "Dağıtılmadı"}</dd>
-              </div>
+              <div className="flex justify-between gap-3"><dt>Şirkette kalan</dt><dd>{tl(result.companyKeeps)}</dd></div>
+              <div className="flex justify-between gap-3"><dt>Kâr payı stopajı (%15)</dt><dd>{distribution === 0 ? "Dağıtılmadı" : tl(result.withholding)}</dd></div>
+              <div className="flex justify-between gap-3"><dt>Beyanda ek vergi</dt><dd>{result.extraTax > 0 ? tl(result.extraTax) : "Yok"}</dd></div>
               <div className="flex justify-between gap-3"><dt>Ortağın Bağ-Kur primi</dt><dd>{tl(result.bagkur)}</dd></div>
+              <div className="flex justify-between gap-3"><dt>Ortağın cebine giren</dt><dd>{tl(result.partnerCash)}</dd></div>
             </dl>
           </div>
         </div>
 
-        <div className="bg-blue-950/30 border border-blue-900/50 p-4 rounded-xl flex items-start gap-3 text-sm text-blue-300">
-          <ShieldCheck className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 rounded-xl border border-blue-900/50 bg-blue-950/30 p-4 text-sm text-blue-300">
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-400" />
           <span>
             <strong>
-              {soleWins ? "Şahıs şirketi" : "Limited şirket"} bu seçimde yaklaşık {tl(gap)} daha fazla bırakıyor.
+              {winnerName} bu seçimde yaklaşık {tl(gap)} daha fazla bırakıyor.
             </strong>{" "}
-            {distribute
-              ? "Dağıtılan kâr payında önce %15 stopaj kesilir. İstisna sonrası tutar 400.000 TL’yi aşarsa yıllık beyanda kâr payının yarısı vergi dışı kalır ve stopaj mahsup edilir."
-              : "Kâr şirkette bırakılırsa kâr payı vergisi doğmaz. Şahıs tarafında aynı kâr, Bağ-Kur ve örnek idari gider düşüldükten sonra artan oranlı gelir vergisine girer."}
+            {distribution === 0
+              ? "Kâr şirkette kalırsa kâr payı vergisi doğmaz. Şahıs tarafında aynı kâr, Bağ-Kur ve örnek idari giderden sonra artan oranlı gelir vergisine girer."
+              : "Dağıtılan kâr payında %15 stopaj kesilir. Beyan gereken kısımda stopaj, hesaplanan vergiden düşülür. Dağıtılmayan kısım şirkette kalır."}
           </span>
         </div>
 
@@ -286,11 +399,69 @@ export default function TaxCalculator() {
           </p>
         ) : null}
 
+        <form onSubmit={sendQuote} className="space-y-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+          <div>
+            <h4 className="font-semibold text-white">Bu hesaplama için uzman desteği al</h4>
+            <p className="mt-1 text-xs text-slate-400">Teklif isteyin. Yıllık kâr, senaryo ve avantaj tutarı da iletilir.</p>
+          </div>
+          {quoteState === "sent" ? (
+            <p className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
+              Talebiniz alındı. En kısa sürede sizi arayacağız.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <label className="block text-xs text-slate-400">
+                  Ad
+                  <input
+                    required
+                    autoComplete="name"
+                    value={quote.name}
+                    onChange={(event) => setQuote({ ...quote, name: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="block text-xs text-slate-400">
+                  Telefon
+                  <input
+                    required
+                    type="tel"
+                    autoComplete="tel"
+                    value={quote.phone}
+                    onChange={(event) => setQuote({ ...quote, phone: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="block text-xs text-slate-400">
+                  E-posta
+                  <input
+                    required
+                    type="email"
+                    autoComplete="email"
+                    value={quote.email}
+                    onChange={(event) => setQuote({ ...quote, email: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+              </div>
+              {quoteState === "error" ? <p className="text-sm text-red-400">Talep gönderilemedi. Lütfen tekrar deneyin.</p> : null}
+              <button
+                type="submit"
+                disabled={quoteState === "sending"}
+                className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60 sm:w-auto sm:px-6"
+              >
+                {quoteState === "sending" ? "Gönderiliyor" : "Teklif iste"}
+              </button>
+            </>
+          )}
+        </form>
+
         <p className="text-[11px] leading-relaxed text-slate-500">
           Simülasyondur, bağlayıcı vergi hesabı değildir. Şahıs tarafında 2026 ücret dışı gelir tarifesi kullanılır
           (190.000 TL’ye kadar %15, 400.000 TL’ye kadar %20, 1.000.000 TL’ye kadar %27, 5.300.000 TL’ye kadar %35, fazlası %40).
           Bağ-Kur, 2026 asgari kazanç üzerinden 5 puan indirimli aylık 10.156,73 TL kabul edilmiştir. İdari giderler örnektir.
-          Kurumlar vergisi %25’tir. Ücret bordrosu, teşvikler ve kârın kısmen dağıtılması bu sonuca dahil değildir.
+          Kurumlar vergisi %25’tir. Dağıtılan kâr payında %15 stopaj vardır. Beyan sınırını aşan yarıda stopaj mahsup edilir;
+          stopaj beyan vergisinden yüksekse fark iade edilmez.
         </p>
       </div>
     </div>
