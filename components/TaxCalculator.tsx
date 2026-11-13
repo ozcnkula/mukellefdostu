@@ -184,14 +184,17 @@ export default function TaxCalculator() {
   const markUsed = () => setUsed(true);
 
   useEffect(() => {
-    const params = readShareParams();
-    if (params.revenue !== null) setRevenue(params.revenue);
-    if (params.staff !== null) setStaff(params.staff);
-    if (params.office !== null) setOffice(params.office);
-    if (params.marketing !== null) setMarketing(params.marketing);
-    if (params.vehicle !== null) setVehicle(params.vehicle);
-    if (params.distribution !== null) setDistribution(params.distribution);
-    if (params.revenue !== null || params.distribution !== null) setUsed(true);
+    const timer = window.setTimeout(() => {
+      const params = readShareParams();
+      if (params.revenue !== null) setRevenue(params.revenue);
+      if (params.staff !== null) setStaff(params.staff);
+      if (params.office !== null) setOffice(params.office);
+      if (params.marketing !== null) setMarketing(params.marketing);
+      if (params.vehicle !== null) setVehicle(params.vehicle);
+      if (params.distribution !== null) setDistribution(params.distribution);
+      if (params.revenue !== null || params.distribution !== null) setUsed(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
