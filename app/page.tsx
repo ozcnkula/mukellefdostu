@@ -23,6 +23,7 @@ import {
   FileDown,
   Send,
   Sparkles,
+  Search,
   Store,
 } from "lucide-react";
 
@@ -120,6 +121,9 @@ export default function Home() {
           </a>
           <a href="#hukuk-danismanligi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
             <Scale className="h-4 w-4 text-indigo-400" /> Hukuk ve uyum notları
+          </a>
+          <a href="/nace" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
+            <Search className="h-4 w-4 text-blue-400" /> NACE kod bulucu
           </a>
           <a href="/e-ticaret-vergi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-teal-500/50">
             <Store className="h-4 w-4 text-teal-400" /> E-ticaret vergi rehberi
