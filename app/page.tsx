@@ -7,6 +7,8 @@ import { LEAD_TOPICS } from "@/lib/lead-topics";
 import { trackEvent } from "@/lib/track";
 import AiAssistant from "@/components/AiAssistant";
 import LegalConsulting from "@/components/LegalConsulting";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import {
   Building2,
   ShoppingCart,
@@ -21,6 +23,7 @@ import {
   FileDown,
   Send,
   Sparkles,
+  Store,
 } from "lucide-react";
 
 const CHECKLIST_HREF = "/2026-e-ticaret-vergi-checklist.pdf";
@@ -88,53 +91,57 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 px-6 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <a href="#hero" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 font-bold text-white">M</div>
-            <span className="text-xl font-bold tracking-tight text-white">
-              mukellefdostu<span className="text-blue-500">.com</span>
-            </span>
-          </a>
-          <div className="flex items-center gap-3">
-            <a href="/rehber" className="hidden items-center gap-2 text-sm font-medium text-slate-300 transition hover:text-white sm:flex">
-              <BookOpen className="h-4 w-4 text-amber-400" /> Bilgi Merkezi
-            </a>
-            <a href="#lead-form" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500">
-              Ücretsiz Danışmanlık
-            </a>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen bg-slate-950 font-sans text-slate-100">
+      <SiteHeader />
 
-      <section id="hero" className="mx-auto max-w-6xl scroll-mt-24 px-6 pb-16 pt-20 text-center">
+      <section id="hero" className="mx-auto max-w-6xl scroll-mt-24 px-4 pb-24 pt-10 text-center sm:px-6 sm:pb-16 sm:pt-20">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-800 bg-blue-950 px-3 py-1 text-xs font-medium text-blue-400">
-          <Sparkles className="h-3.5 w-3.5" /> 2026 Mevzuatına %100 Uyumlu
+          <Sparkles className="h-3.5 w-3.5" /> 2026 Mevzuatına Göre Güncel Bilgiler
         </span>
-        <h1 className="mb-6 text-4xl font-extrabold tracking-tight md:text-6xl">
+        <h1 className="mb-4 text-3xl font-extrabold tracking-tight sm:mb-6 sm:text-4xl md:text-6xl">
           Bürokratik Engellere Değil, <br />
           <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">İşini Büyütmeye Odaklan</span>
         </h1>
-        <p className="mx-auto mb-10 max-w-2xl text-lg text-slate-400">
-          E-fatura, vergi hesaplama ve mali danışmanlık süreçlerinde girişimciler ve e-ticaretçiler için tasarlanmış akıllı rehber platform.
+        <p className="mx-auto mb-6 max-w-2xl text-base text-slate-400 sm:mb-10 sm:text-lg">
+          Araçlar vergi, Bağ-Kur ve kuruluş başlıklarını sadeleştirir. Beyanname, defter ve mevzuat uygulaması mali müşavirin bilgisiyle yürür. Karar, sizin işletmenize bakılarak birlikte verilir.
         </p>
-        <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-3">
+        <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-3 pr-12 sm:pr-0">
           <a href="#hesaplayici" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Calculator className="h-4 w-4 text-blue-400" /> Şahıs vs. Ltd. Hesaplayıcı
+            <Calculator className="h-4 w-4 text-blue-400" /> Vergi, Bağ-Kur ve maliyet
           </a>
           <a href="#ai-asistan" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Bot className="h-4 w-4 text-blue-400" /> AI Mali Asistan
-          </a>
-          <a href="#hukuk-danismanligi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Scale className="h-4 w-4 text-indigo-400" /> Hukuk & Uyum
+            <Bot className="h-4 w-4 text-blue-400" /> Vergi, SGK ve kuruluş
           </a>
           <a href="/rehber" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-500/50">
-            <BookOpen className="h-4 w-4 text-amber-400" /> Bilgi Merkezi
+            <BookOpen className="h-4 w-4 text-amber-400" /> Mevzuat rehberi
           </a>
           <a href="#lead-form" className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-500">
-            <FileDown className="h-4 w-4" /> Ücretsiz 2026 Checklist İndir
+            <FileDown className="h-4 w-4" /> Kuruluş checklist’i
           </a>
+          <a href="#hukuk-danismanligi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
+            <Scale className="h-4 w-4 text-indigo-400" /> Hukuk ve uyum notları
+          </a>
+          <a href="/e-ticaret-vergi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-teal-500/50">
+            <Store className="h-4 w-4 text-teal-400" /> E-ticaret vergi rehberi
+          </a>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-800">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <h2 className="mb-8 text-center text-xl font-bold text-slate-200">Nasıl çalışıyoruz?</h2>
+          <ol className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {[
+              ["1", "İhtiyacınızı öğreniyoruz."],
+              ["2", "İşletmenizin durumunu değerlendiriyoruz."],
+              ["3", "Muhasebe ve mali süreçlerinizi birlikte yürütüyoruz."],
+            ].map(([step, text]) => (
+              <li key={step} className="rounded-xl border border-slate-800 bg-slate-900 p-5">
+                <span className="mb-3 grid h-8 w-8 place-items-center rounded-full bg-teal-600 text-sm font-bold text-white">{step}</span>
+                <p className="font-medium text-slate-100">{text}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -177,8 +184,8 @@ export default function Home() {
             </p>
           </aside>
           <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
-            <h2 className="mb-2 text-2xl font-bold text-white">Ücretsiz bilgi alın</h2>
-            <p className="mb-6 text-sm text-slate-400">Adınızı ve telefonunuzu bırakın. 2026 checklist dosyası hemen iner, biz de sizi ararız.</p>
+            <h2 className="mb-2 text-2xl font-bold text-white">Ön görüşme talep edin</h2>
+            <p className="mb-6 text-sm text-slate-400">Adınızı ve telefonunuzu bırakın. Kuruluş checklist’i bilgilendirme notu olarak iner. Bu form mali müşavirlik sözleşmesi kurmaz.</p>
 
             {leadSubmitted ? (
               <div className="space-y-4">
@@ -242,7 +249,7 @@ export default function Home() {
                 </div>
                 {leadError ? <p className="text-sm text-red-400">{leadError}</p> : null}
                 <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500">
-                  <Send className="h-4 w-4" /> Ücretsiz Bilgi Al
+                  <Send className="h-4 w-4" /> Görüşme talep et
                 </button>
               </form>
             )}
@@ -250,12 +257,47 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-slate-800 py-8 text-center text-xs text-slate-500">
-        © 2026 mukellefdostu.com - Tüm Hakları Saklıdır.
-      </footer>
+      <section className="border-t border-slate-800">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+          <h2 className="mb-6 text-center text-xl font-bold text-slate-200">Sıkça sorulan sorular</h2>
+          <div className="space-y-3">
+            {FAQ.map((item) => (
+              <details key={item.q} className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
+                <summary className="cursor-pointer font-medium text-slate-100">{item.q}</summary>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }
+
+const FAQ = [
+  {
+    q: "Şirket kurduktan sonra mali müşavir zorunlu mu?",
+    a: "Bilanço esasına göre defter tutan işletmelerde defter ve beyannameler meslek mensubuyla yürütülür. Şahıs işletmesinde usul, had ve faaliyet türüne göre değişir. Kuruluştan sonra hangi defterin tutulacağı ayrıca bakılır.",
+  },
+  {
+    q: "Şahıs şirketi mi, limited şirket mi?",
+    a: "Tek bir cevap yoktur. Vergi dilimi, Bağ-Kur, kârın şirkette kalıp kalmayacağı ve ortaklık yapısı sonucu değiştirir. Sayfadaki hesaplayıcı bu başlıkları örnek rakamla yan yana koyar; nihai seçim mali müşavirle yapılır.",
+  },
+  {
+    q: "Şirketim yokken fatura kesebilir miyim?",
+    a: "Ticari fatura için önce vergi mükellefiyeti gerekir. Mükellefiyet açılmadan kendi adınıza satış faturası düzenlenmez. Arızi kazanç ile sürekli ticaret aynı işleme girmez.",
+  },
+  {
+    q: "Aylık muhasebe ücreti neye göre belirlenir?",
+    a: "Ücret; evrak hacmi, çalışan sayısı, e-belge, pazaryeri ve beyanname yüküne göre belirlenir. Sitede sabit bir fiyat listesi yayımlanmaz. Kapsam ön görüşmede konuşulur, yazılı sözleşmede yer alır.",
+  },
+  {
+    q: "Şirket açılışından sonra hangi yükümlülüklerim var?",
+    a: "Vergi levhası, e-belge ve defter düzeni, KDV ve muhtasar dönemleri, çalışan varsa SGK bildirgeleri ve ticaret sicil yükümlülükleri ilk bakılacak başlıklardır. Checklist bu listeyi hatırlatır, başvuruyu sizin adınıza yapmaz.",
+  },
+];
 
 function ProfileCard({ id, icon, desc }: { id: ProfileId; icon: React.ReactNode; desc: string }) {
   const { profileId, setProfileId } = useSite();

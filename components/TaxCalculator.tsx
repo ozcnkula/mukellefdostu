@@ -287,7 +287,7 @@ export default function TaxCalculator() {
         </div>
         <div>
           <h3 className="text-xl font-bold text-white">2026 Şahıs vs. Ltd. Vergi Simülatörü</h3>
-          <p className="text-xs text-slate-400">Geliri ve gideri kaydırın. Vergi öncesi kâr kendiliğinden çıkar.</p>
+          <p className="text-xs text-slate-400">Vergi, Bağ-Kur ve maliyet karşılaştırması. Giderleri kaydırın, vergi öncesi kâr kendiliğinden çıkar.</p>
         </div>
       </div>
 

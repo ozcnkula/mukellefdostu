@@ -163,7 +163,7 @@ function Catalog({
         {knowledgeBase.slogan}
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-relaxed text-pretty text-slate-400">
-        Şirket kuruluşu, vergi ve günlük muhasebe kararları için kısa notlar. Son gözden geçirme:{" "}
+        Konuya göre güncel mevzuat açıklamaları. Şirket kuruluşu, vergi ve günlük muhasebe kararları için kısa notlar. Son gözden geçirme:{" "}
         {knowledgeBase.updated}.
       </p>
 

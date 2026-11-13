@@ -7,8 +7,6 @@ import { PROFILE_LABELS, useSite } from "@/components/SiteProvider";
 import { answerQuestion, simulatorSentence, type AssistantReply } from "@/lib/assistant";
 import { trackEvent } from "@/lib/track";
 
-const GREETING = "Merhaba, bilgi merkezinden bir vergi veya SGK sorusu sorun.";
-
 const INTRO: AssistantReply = {
   text: "Bilgi merkezindeki şirket, vergi ve SGK notlarından yanıt veririm. Sorunuzu yazın.",
   source: null,
@@ -29,19 +27,9 @@ type ChatMessage = { role: "user"; text: string } | { role: "assistant"; reply: 
 export default function FloatingAssistant() {
   const { profileId, simulator } = useSite();
   const [open, setOpen] = useState(false);
-  const [greet, setGreet] = useState(false);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", reply: INTRO }]);
   const scroller = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (sessionStorage.getItem("md-assistant-greet")) return;
-    const timer = window.setTimeout(() => {
-      setGreet(true);
-      sessionStorage.setItem("md-assistant-greet", "1");
-    }, 4000);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -68,23 +56,10 @@ export default function FloatingAssistant() {
     setDraft("");
   };
 
-  const openPanel = () => {
-    setGreet(false);
-    setOpen(true);
-  };
+  const openPanel = () => setOpen(true);
 
   return (
     <>
-      {greet && !open ? (
-        <button
-          type="button"
-          onClick={openPanel}
-          className="fixed bottom-24 right-5 z-[60] max-w-xs rounded-2xl rounded-br-md border border-teal-700/60 bg-slate-900 px-4 py-3 text-left text-sm leading-relaxed text-slate-100 shadow-xl"
-        >
-          {GREETING}
-        </button>
-      ) : null}
-
       {open ? (
         <section
           id="floating-assistant"
@@ -174,11 +149,11 @@ export default function FloatingAssistant() {
           onClick={openPanel}
           aria-expanded={false}
           aria-controls="floating-assistant"
-          className="fixed bottom-5 right-5 z-[60] grid h-14 w-14 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-950/50 transition hover:bg-teal-500"
+          className="fixed bottom-3 right-3 z-40 grid h-11 w-11 place-items-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-950/40 transition hover:bg-teal-500 sm:bottom-5 sm:right-5 sm:h-14 sm:w-14"
         >
           <span className="relative">
-            <MessageCircle className="h-7 w-7" />
-            <Bot className="absolute -bottom-1 -right-2 h-4 w-4 rounded-full bg-teal-300 p-0.5 text-slate-950" />
+            <MessageCircle className="h-5 w-5 sm:h-7 sm:w-7" />
+            <Bot className="absolute -bottom-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-teal-300 p-0.5 text-slate-950 sm:-right-2 sm:h-4 sm:w-4" />
           </span>
           <span className="sr-only">Mali asistanı aç</span>
         </button>

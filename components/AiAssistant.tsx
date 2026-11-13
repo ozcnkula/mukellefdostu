@@ -30,7 +30,7 @@ export default function AiAssistant() {
         <Bot className="h-6 w-6 text-blue-400" />
         <div>
           <h3 className="font-semibold text-white">2026 AI Mali Asistan</h3>
-          <p className="text-xs text-slate-400">Bilgi merkezi yanıtları</p>
+          <p className="text-xs text-slate-400">Vergi, SGK ve şirket kuruluşu soruları. Yanıt, bilgi merkezindeki nota bağlanır.</p>
         </div>
       </div>
       <div

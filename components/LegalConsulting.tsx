@@ -6,7 +6,7 @@ import { Scale, FileText, ShieldCheck, AlertCircle, CheckCircle2 } from "lucide-
 const LEGAL_SERVICES = [
   {
     title: "Mesafeli Satış Sözleşmeleri & İade Politikaları",
-    desc: "2026 Tüketici Koruma Kanunu'na tam uyumlu e-ticaret sitenize özel sözleşme altyapısı.",
+    desc: "E-ticaret siteniz için sözleşme ve iade metinlerinde bakılacak başlıklar.",
     tag: "Zorunlu Uyum"
   },
   {
@@ -63,12 +63,12 @@ export default function LegalConsulting() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
           <div className="text-sm">
-            <strong className="text-white block mb-0.5">2026 Dijital Ticaret Mevzuatı Denetimi</strong>
-            <span className="text-slate-400 text-xs">E-ticaret sitenizi yasal risklere karşı avukat ortaklarımızla inceliyoruz.</span>
+            <strong className="text-white block mb-0.5">E-ticaret mevzuat notları</strong>
+            <span className="text-slate-400 text-xs">Sözleşme ve KVKK başlıkları bilgilendirme amaçlıdır. İnceleme, yazılı kapsamla ayrıca değerlendirilir.</span>
           </div>
         </div>
         <a href="#lead-form" className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-5 py-2.5 rounded-lg transition shrink-0">
-          Hukuki İnceleme Talep Et
+          Ön görüşme talep et
         </a>
       </div>
     </div>
