@@ -10,7 +10,7 @@ export default function GizlilikPage() {
         Zorunlu teknik çerezler oturumun çalışması için kullanılabilir. Reklam çerezi veya üçüncü taraf pazarlama profili oluşturulmaz. Tarayıcı ayarlarından çerezleri silebilirsiniz; bu durumda sayfa ölçümü eksik kalabilir.
       </p>
       <p>
-        Formda yazdığınız bilgiler yalnızca talep kaydı ve size dönüş için kullanılır. Başka bir ürünün reklamı için satılmaz.
+        Formda yazdığınız bilgiler talep kaydı ve size dönüş için kullanılır. Ön eşleştirmede, ayrı onay kutusundaki açık rıza kapsamında özet senaryo ilgili iş ortağıyla paylaşılabilir. Başka bir ürünün reklamı için satılmaz.
       </p>
     </InfoPage>
   );

@@ -1,3 +1,5 @@
+import type { SimulatorPreset } from "./simulator-link";
+
 export const slogan =
   "Doğru muhasebe, sağlıklı finansal kararlar ve güvenilir danışmanlık.";
 
@@ -24,11 +26,17 @@ export type FaqItem = {
   answer: string;
 };
 
+export const columnScopeNote =
+  "Karar destek ve varsayımsal simülasyon amaçlıdır; resmî mali müşavirlik veya hukuki danışmanlık yerine geçmez.";
+
 export type Article = {
   slug: string;
   title: string;
   summary: string;
   minutes: number;
+  updated?: string;
+  scopeNote?: string;
+  presets?: readonly SimulatorPreset[];
   sections: ArticleSection[];
   table?: ArticleTable;
   calendar?: CalendarItem[];
@@ -161,6 +169,187 @@ export const knowledgeBase = {
       description:
         "Vergi, SGK ve iş hukuku başlıklarını kanun adıyla değil, işletmenin günlük kararıyla okuyun.",
       articles: [
+        {
+          slug: "sahis-limited-bes-degisken",
+          title: "Şahıs Şirketi Mi Limited Şirket Mi? 2026 Karşılaştırmasında Eşiği Belirleyen 5 Değişken",
+          summary:
+            "Vergi öncesi kâr, kârın ne kadarının çekildiği, Bağ-Kur, örnek idari gider ve sorumluluk aynı kararı beş ayrı yerden etkiler.",
+          minutes: 6,
+          updated: "15 Kasım 2026",
+          scopeNote: columnScopeNote,
+          presets: [
+            {
+              label: "Kâr şirkette kalsın varsayımı",
+              gelir: 1_500_000,
+              personel: 300_000,
+              ofis: 100_000,
+              pazarlama: 50_000,
+              arac: 50_000,
+              dagitim: 0,
+            },
+          ],
+          sections: [
+            {
+              heading: "Beş değişken, tek cümle değil",
+              paragraphs: [
+                "Şahıs işletmesinde kâr, Bağ-Kur ve örnek idari giderden sonra artan oranlı gelir vergisine girer. Limitedde önce kurumlar vergisi hesaplanır; ortağa geçen kısımda ayrıca kâr payı stopajı ve gerekirse beyan doğar.",
+                "Eşiği tek başına ciro belirlemez. Aynı kâr, dağıtım oranı değişince cebine giren tutarı da değiştirir. Simülatör bu başlıkları varsayımsal rakamla yan yana koyar.",
+              ],
+              points: [
+                "Vergi öncesi kâr: brüt gelir eksi personel, ofis, pazarlama ve araç.",
+                "Dağıtım oranı: kârın şirkette kalan ve çekilen payı.",
+                "Bağ-Kur: örnekte indirimli asgari prim, her iki tarafta da ortağın cebinden düşülür.",
+                "İdari gider: şahıs ve limited için ayrı örnek tutarlar.",
+                "Sorumluluk: vergi hesabının dışında, borçta kişisel risk ayrıca konuşulur.",
+              ],
+            },
+          ],
+        },
+        {
+          slug: "sahis-limited-gecis",
+          title: "2026’da Şahıs İşletmesinden Limited Şirkete Geçiş: Ne Zaman Mantıklı, Ne Zaman Erken?",
+          summary:
+            "Geçiş, vergi satırından önce nakit, sözleşme ve kapanış takvimine bakılarak konuşulur. Erken tür değişikliği de maliyet üretir.",
+          minutes: 6,
+          updated: "15 Kasım 2026",
+          scopeNote: columnScopeNote,
+          presets: [
+            {
+              label: "Büyümüş kâr, dağıtım yok",
+              gelir: 3_500_000,
+              personel: 600_000,
+              ofis: 150_000,
+              pazarlama: 100_000,
+              arac: 80_000,
+              dagitim: 0,
+            },
+          ],
+          sections: [
+            {
+              heading: "Mantıklı görünen eşik",
+              paragraphs: [
+                "Kâr büyüdükçe şahıs tarafındaki artan oran, limitedde şirkette bırakılan kârın kurumlar vergisiyle kalmasından daha ağır görünebilir. Bu, her dosyada geçiş kararı değildir.",
+                "Personel, stok, uzun süreli sözleşme veya kişisel mal varlığını ilgilendiren risk varsa tür konuşması vergi satırından önce gelir.",
+              ],
+            },
+            {
+              heading: "Erken geçişin maliyeti",
+              paragraphs: [
+                "Limited kuruluşunda sermaye, sözleşme, sicil ve örnek olarak daha yüksek idari gider vardır. Kâr henüz düzensizse bu sabitler, beklenen vergi farkını yiyebilir.",
+                "Şahıs mükellefiyetinin kapanışı, devreden stok, açık fatura ve çalışan bildirgeleri ayrıca planlanır. Simülatör bu kapanış işlemlerini hesaplamaz; yalnızca seçilen kâr ve dağıtım varsayımını karşılaştırır.",
+              ],
+            },
+          ],
+        },
+        {
+          slug: "e-ticaret-sahis-limited",
+          title: "E-Ticaret ve Pazaryeri Satıcıları İçin 2026 Şahıs vs. Limited Vergi Senaryoları",
+          summary:
+            "Pazaryeri komisyonu ve reklam, vergi öncesi kârı düşürür. Kalan kârın ne kadarının çekildiği, şahıs ve limited sonucunu ayırır.",
+          minutes: 6,
+          updated: "15 Kasım 2026",
+          scopeNote: columnScopeNote,
+          presets: [
+            {
+              label: "Pazaryeri giderli senaryo",
+              gelir: 2_500_000,
+              personel: 200_000,
+              ofis: 80_000,
+              pazarlama: 450_000,
+              arac: 40_000,
+              dagitim: 50,
+            },
+          ],
+          sections: [
+            {
+              heading: "Ciro ile kâr aynı satır değil",
+              paragraphs: [
+                "Pazaryeri satıcısında brüt tahsilat, komisyon, iade, kargo ve reklam düşülmeden vergi matrahı sayılmaz. Simülatörde bu kalemler pazarlama ve diğer gider kutularına varsayım olarak yazılır.",
+                "e-Belge, tevkifat ve stopaj, faaliyet ve alıcıya göre ayrıca doğar. Bu yazıdaki senaryo onları tek tek hesaplamaz.",
+              ],
+            },
+            {
+              heading: "Kârın yarısını çekmek",
+              paragraphs: [
+                "Örnek bağlantı, kalan kârın yarısının dağıtıldığı bir varsayımı açar. Tamamı çekilirse kâr payı stopajı büyür; hiç çekilmezse limited tarafında bu stopaj doğmaz, şahıs tarafında kâr yine gelir vergisine girer.",
+              ],
+            },
+          ],
+        },
+        {
+          slug: "kar-iceride-nakit-cikisi",
+          title: "Kârı İçeride Tutmak Mı, Çekmek Mi? 2026’da Şahıs ve Limited Nakit Çıkışı Farkı",
+          summary:
+            "Şahısta kârın işletmede durması, gelir vergisi tarifesini kendiliğinden kapatmaz. Limitedde dağıtılmayan kısım kâr payı stopajına girmez.",
+          minutes: 5,
+          updated: "15 Kasım 2026",
+          scopeNote: columnScopeNote,
+          presets: [
+            {
+              label: "Kâr içeride",
+              gelir: 1_500_000,
+              personel: 300_000,
+              ofis: 100_000,
+              pazarlama: 50_000,
+              arac: 50_000,
+              dagitim: 0,
+            },
+            {
+              label: "Kârın tamamı çekilsin",
+              gelir: 1_500_000,
+              personel: 300_000,
+              ofis: 100_000,
+              pazarlama: 50_000,
+              arac: 50_000,
+              dagitim: 100,
+            },
+          ],
+          sections: [
+            {
+              heading: "Aynı kâr, iki nakit yolu",
+              paragraphs: [
+                "İki bağlantı aynı gelir ve gideri açar. Birinde dağıtım %0, diğerinde %100’dür. Ara oranlar simülatörde kaydırılarak bakılır.",
+                "Dağıtılan kâr payında %15 stopaj vardır. Beyan sınırını aşan yarıda, stopaj mahsup edildikten sonra kalan vergi eklenir. Stopaj beyan vergisinden yüksekse örnek model farkı iade etmez.",
+              ],
+            },
+          ],
+        },
+        {
+          slug: "tek-ortak-gizli-maliyet",
+          title: "Tek Ortaklı Kuruluşta 2026 Şahıs vs. Limited: Gizli Maliyetler ve Esneklik",
+          summary:
+            "Tek ortaklı limited kurulabilir. Sermaye, muhasebe düzeni ve kârı çekme biçimi, görünen vergi farkının yanında durur.",
+          minutes: 5,
+          updated: "15 Kasım 2026",
+          scopeNote: columnScopeNote,
+          presets: [
+            {
+              label: "Tek ortak, düşük dağıtım",
+              gelir: 900_000,
+              personel: 120_000,
+              ofis: 60_000,
+              pazarlama: 30_000,
+              arac: 40_000,
+              dagitim: 0,
+            },
+          ],
+          sections: [
+            {
+              heading: "Görünmeyen satırlar",
+              paragraphs: [
+                "Tek ortak, limitedi imkânsız yapmaz. Sermaye taahhüdü, ticaret sicili, örnek muhasebe gideri ve kâr payı kararı şahıs işletmesinde olmayan bir düzen kurar.",
+                "Kamu alacaklarında kanuni temsilcinin sorumluluğu ayrıca doğabilir. “Tek ortaklı limited, kişisel riski sıfırlar” cümlesi bu yazının sonucu değildir.",
+              ],
+            },
+            {
+              heading: "Esneklik neye yarar?",
+              paragraphs: [
+                "İleride ortak almak veya pay devretmek konuşuluyorsa limitedin pay yapısı, şahıs işletmesinin devrinden farklı bir yol sunar. Bu esneklik, düşük kârda vergi avantajı anlamına gelmez.",
+                "Bağlantıdaki varsayım küçük personel ve ofis gideriyle kârı şirkette bırakır. Kendi rakamınızı simülatörde değiştirin.",
+              ],
+            },
+          ],
+        },
         {
           slug: "vergi-mevzuati",
           title: "Vergi Mevzuatı",

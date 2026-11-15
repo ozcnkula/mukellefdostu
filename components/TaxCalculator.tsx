@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Calculator, Copy, MessageCircle, ShieldCheck } from "lucide-react";
 import { useSite } from "@/components/SiteProvider";
+import { MATCH_FOCI, type MatchFocus } from "@/lib/match-focus";
 import { trackEvent } from "@/lib/track";
 
 const BRACKETS = [
@@ -173,6 +174,9 @@ export default function TaxCalculator() {
   const [notice, setNotice] = useState("");
   const [quote, setQuote] = useState({ name: "", phone: "", email: "" });
   const [quoteState, setQuoteState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [match, setMatch] = useState({ name: "", contact: "", focus: "" as "" | MatchFocus, consent: false });
+  const [matchState, setMatchState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [matchError, setMatchError] = useState("");
   const expenses = staff + office + marketing + vehicle;
   const profit = Math.max(0, revenue - expenses);
   const result = compare(profit, distribution);
@@ -276,6 +280,50 @@ export default function TaxCalculator() {
       setQuoteState(response.ok ? "sent" : "error");
     } catch {
       setQuoteState("error");
+    }
+  };
+
+  const sendMatch = async (event: FormEvent) => {
+    event.preventDefault();
+    setMatchError("");
+    if (!match.consent) {
+      setMatchState("error");
+      setMatchError("Devam etmek için KVKK açık rızası gerekli.");
+      return;
+    }
+    setMatchState("sending");
+    try {
+      const response = await fetch("/api/teklif", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "eslestirme",
+          name: match.name,
+          contact: match.contact,
+          focus: match.focus,
+          consent: match.consent,
+          revenue,
+          staff,
+          office,
+          marketing,
+          vehicle,
+          profit,
+          advantage: gap,
+          distribution,
+          winner: senaryo,
+        }),
+      });
+      const data = (await response.json()) as { success?: boolean; error?: string };
+      if (!response.ok || !data.success) {
+        setMatchState("error");
+        setMatchError(data.error || "Kayıt iletilemedi. Birkaç dakika sonra yeniden deneyin.");
+        return;
+      }
+      setMatchState("sent");
+      setMatch({ name: "", contact: "", focus: "", consent: false });
+    } catch {
+      setMatchState("error");
+      setMatchError("Kayıt iletilemedi. Birkaç dakika sonra yeniden deneyin.");
     }
   };
 
@@ -466,6 +514,92 @@ export default function TaxCalculator() {
           Kurumlar vergisi %25’tir. Dağıtılan kâr payında %15 stopaj vardır. Beyan sınırını aşan yarıda stopaj mahsup edilir;
           stopaj beyan vergisinden yüksekse fark iade edilmez.
         </p>
+
+        <form onSubmit={sendMatch} className="space-y-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
+          <div>
+            <h4 className="font-semibold text-white">Senaryonu bir uzmanla netleştir</h4>
+            <p className="mt-1 text-xs text-slate-400">
+              Ön eşleştirme talebidir. Özet, seçtiğiniz odakla birlikte iletilir. Bu form mali müşavirlik sözleşmesi kurmaz.
+            </p>
+          </div>
+          {matchState === "sent" ? (
+            <p className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
+              Talebiniz alındı. Özet senaryo, seçtiğiniz odak konusuyla birlikte kaydedildi.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block text-xs text-slate-400">
+                  Ad soyad
+                  <input
+                    required
+                    autoComplete="name"
+                    value={match.name}
+                    onChange={(event) => setMatch({ ...match, name: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="block text-xs text-slate-400">
+                  E-posta veya telefon
+                  <input
+                    required
+                    autoComplete="email"
+                    value={match.contact}
+                    onChange={(event) => setMatch({ ...match, contact: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </label>
+                <label className="block text-xs text-slate-400 sm:col-span-2">
+                  Odak konusu
+                  <select
+                    required
+                    value={match.focus}
+                    onChange={(event) => setMatch({ ...match, focus: event.target.value as MatchFocus })}
+                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="">Seçin</option>
+                    {MATCH_FOCI.map((focus) => (
+                      <option key={focus} value={focus}>
+                        {focus}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <dl className="grid grid-cols-1 gap-2 rounded-lg border border-slate-800 bg-slate-900 p-3 text-xs text-slate-300 sm:grid-cols-2">
+                <div className="flex justify-between gap-3"><dt>Yıllık brüt gelir</dt><dd>{tl(revenue)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Personel</dt><dd>{tl(staff)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Ofis</dt><dd>{tl(office)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Pazarlama</dt><dd>{tl(marketing)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Araç</dt><dd>{tl(vehicle)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Vergi öncesi kâr</dt><dd>{tl(profit)}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Dağıtım</dt><dd>%{distribution}</dd></div>
+                <div className="flex justify-between gap-3"><dt>Öne çıkan senaryo</dt><dd>{winnerName}</dd></div>
+                <div className="flex justify-between gap-3 sm:col-span-2"><dt>Fark</dt><dd>{tl(gap)}</dd></div>
+              </dl>
+              <label className="flex items-start gap-3 text-xs leading-relaxed text-slate-300">
+                <input
+                  required
+                  type="checkbox"
+                  checked={match.consent}
+                  onChange={(event) => setMatch({ ...match, consent: event.target.checked })}
+                  className="mt-0.5 accent-teal-500"
+                />
+                <span>
+                  mukellefdostu.com bir ön eşleştirme ve simülasyon platformudur; resmî mali müşavirlik veya hukuki danışmanlık yerine geçmez. Özet senaryo verisinin ilgili iş ortağıyla paylaşılmasını kabul ediyorum.
+                </span>
+              </label>
+              {matchState === "error" ? <p className="text-sm text-red-400">{matchError}</p> : null}
+              <button
+                type="submit"
+                disabled={matchState === "sending"}
+                className="w-full rounded-lg bg-teal-600 py-3 text-sm font-semibold text-white hover:bg-teal-500 disabled:opacity-60 sm:w-auto sm:px-6"
+              >
+                {matchState === "sending" ? "Gönderiliyor" : "Ön eşleştirme iste"}
+              </button>
+            </>
+          )}
+        </form>
       </div>
     </div>
   );

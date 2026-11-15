@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isMatchFocus } from "@/lib/match-focus";
 import { NACE_CODES } from "@/lib/nace-codes";
 
 function money(value: number) {
@@ -20,8 +21,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const name = clean(body.name, 80);
-    const phone = clean(body.phone, 30);
-    const email = clean(body.email, 120);
+    let phone = clean(body.phone, 30);
+    let email = clean(body.email, 120);
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const tarih = new Intl.DateTimeFormat("tr-TR", {
@@ -34,7 +35,55 @@ export async function POST(request: Request) {
     let detail = "";
     let sheetTopic = "";
 
-    if (body.kind === "nace") {
+    if (body.kind === "eslestirme") {
+      const contact = clean(body.contact, 120);
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+      const phoneOk = contact.replace(/\D/g, "").length >= 10;
+      const focus = isMatchFocus(body.focus) ? body.focus : "";
+      const revenue = inRange(body.revenue, 0, 12_000_000);
+      const staff = inRange(body.staff, 0, 3_000_000);
+      const office = inRange(body.office, 0, 3_000_000);
+      const marketing = inRange(body.marketing, 0, 3_000_000);
+      const vehicle = inRange(body.vehicle, 0, 3_000_000);
+      const profit = inRange(body.profit, 0, 20_000_000);
+      const advantage = inRange(body.advantage, 0, 20_000_000);
+      const distribution = inRange(body.distribution, 0, 100);
+      const scenario = body.winner === "ltd" ? "Limited şirket" : body.winner === "sahis" ? "Şahıs şirketi" : "";
+
+      if (!name) {
+        return NextResponse.json({ success: false, error: "Ad soyad gerekli." }, { status: 400 });
+      }
+      if (!emailOk && !phoneOk) {
+        return NextResponse.json({ success: false, error: "Geçerli bir e-posta veya telefon gerekli." }, { status: 400 });
+      }
+      if (!focus) {
+        return NextResponse.json({ success: false, error: "Odak konusu seçin." }, { status: 400 });
+      }
+      if (body.consent !== true) {
+        return NextResponse.json({ success: false, error: "Devam etmek için KVKK açık rızası gerekli." }, { status: 400 });
+      }
+      if (revenue === null || staff === null || office === null || marketing === null || vehicle === null || profit === null || advantage === null || distribution === null || !scenario) {
+        return NextResponse.json({ success: false, error: "Simülatör özeti okunamadı. Sayfayı yenileyip yeniden deneyin." }, { status: 400 });
+      }
+
+      heading = "Yeni ön eşleştirme";
+      detail = [
+        `Odak: ${focus}`,
+        "KVKK açık rıza: evet",
+        `Gelir: ${money(revenue)}`,
+        `Personel: ${money(staff)}`,
+        `Ofis: ${money(office)}`,
+        `Pazarlama: ${money(marketing)}`,
+        `Araç: ${money(vehicle)}`,
+        `Vergi öncesi kâr: ${money(profit)}`,
+        `Dağıtım: %${distribution}`,
+        `Öne çıkan: ${scenario}`,
+        `Fark: ${money(advantage)}`,
+      ].join("\n");
+      sheetTopic = `Ön eşleştirme | ${focus} | ${scenario} | kâr ${money(profit)} | dağıtım %${distribution} | fark ${money(advantage)} | ${contact}`.slice(0, 450);
+      phone = contact;
+      email = emailOk ? contact : "";
+    } else if (body.kind === "nace") {
       const code = clean(body.code, 12);
       const found = NACE_CODES.find((item) => item.code === code);
       if (!name || !phone || !emailOk || !found) {
@@ -59,22 +108,29 @@ export async function POST(request: Request) {
       sheetTopic = `Teklif | ${scenarioText} | kâr ${money(profit)} | avantaj ${money(advantage)} | ${email}`;
     }
 
+    const failed = body.kind === "eslestirme"
+      ? "Kayıt iletilemedi. Birkaç dakika sonra yeniden deneyin."
+      : "Bir hata oluştu.";
     const slackUrl = process.env.SLACK_WEBHOOK_URL;
     const sheetUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
     if (!slackUrl && !sheetUrl) {
-      return NextResponse.json({ success: false, error: "Bir hata oluştu." }, { status: 500 });
+      return NextResponse.json({ success: false, error: failed }, { status: 500 });
     }
+
+    const contactLine = body.kind === "eslestirme"
+      ? `İletişim: ${phone}`
+      : [`Telefon: ${phone}`, `E-posta: ${email}`].join("\n");
 
     if (slackUrl) {
       const slackResponse = await fetch(slackUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: [heading, `Ad Soyad: ${name}`, `Telefon: ${phone}`, `E-posta: ${email}`, detail].join("\n"),
+          text: [heading, `Ad Soyad: ${name}`, contactLine, detail].join("\n"),
         }),
       });
       if (!slackResponse.ok) {
-        return NextResponse.json({ success: false, error: "Bir hata oluştu." }, { status: 500 });
+        return NextResponse.json({ success: false, error: failed }, { status: 500 });
       }
     }
 
@@ -90,7 +146,7 @@ export async function POST(request: Request) {
         }),
       });
       if (!sheetResponse.ok) {
-        return NextResponse.json({ success: false, error: "Bir hata oluştu." }, { status: 500 });
+        return NextResponse.json({ success: false, error: failed }, { status: 500 });
       }
     }
 
