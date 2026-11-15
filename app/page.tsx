@@ -103,30 +103,39 @@ export default function Home() {
           Bürokratik Engellere Değil, <br />
           <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">İşini Büyütmeye Odaklan</span>
         </h1>
-        <p className="mx-auto mb-6 max-w-2xl text-base text-slate-400 sm:mb-10 sm:text-lg">
+        <p className="mx-auto mb-4 max-w-2xl text-base text-slate-400 sm:text-lg">
           Araçlar vergi, Bağ-Kur ve kuruluş başlıklarını sadeleştirir. Beyanname, defter ve mevzuat uygulaması mali müşavirin bilgisiyle yürür. Karar, sizin işletmenize bakılarak birlikte verilir.
         </p>
+        <p className="mx-auto mb-6 max-w-2xl text-sm text-slate-300 sm:mb-10">
+          Şahıs mı, limited mi?{" "}
+          <a href="/rehber#sahis-limited-bes-degisken" className="font-medium text-amber-300 underline decoration-amber-500/50 underline-offset-2">
+            Yazıyı açın
+          </a>
+          , aynı rakamı simülatöre taşıyın.
+        </p>
         <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-3 pr-12 sm:pr-0">
-          <a href="#hesaplayici" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Calculator className="h-4 w-4 text-blue-400" /> Vergi, Bağ-Kur ve maliyet
-          </a>
-          <a href="#ai-asistan" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Bot className="h-4 w-4 text-blue-400" /> Vergi, SGK ve kuruluş
-          </a>
-          <a href="/rehber" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-500/50">
-            <BookOpen className="h-4 w-4 text-amber-400" /> Mevzuat rehberi
-          </a>
-          <a href="#lead-form" className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-500">
-            <FileDown className="h-4 w-4" /> Kuruluş checklist’i
-          </a>
-          <a href="#hukuk-danismanligi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
-            <Scale className="h-4 w-4 text-indigo-400" /> Hukuk ve uyum notları
+          <a href="#hesaplayici" className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-500">
+            <Calculator className="h-4 w-4" /> Vergi simülatörü
           </a>
           <a href="/nace" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-blue-500/50">
             <Search className="h-4 w-4 text-blue-400" /> NACE kod bulucu
           </a>
-          <a href="/e-ticaret-vergi" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-teal-500/50">
-            <Store className="h-4 w-4 text-teal-400" /> E-ticaret vergi rehberi
+          <a href="/rehber#sahis-limited-bes-degisken" className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2 text-sm text-slate-300 transition hover:border-amber-500/50">
+            <BookOpen className="h-4 w-4 text-amber-400" /> Mevzuat köşesi
+          </a>
+        </div>
+        <div className="mx-auto mt-3 flex max-w-3xl flex-wrap justify-center gap-2 pr-12 sm:pr-0">
+          <a href="#ai-asistan" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 transition hover:text-slate-200">
+            <Bot className="h-3.5 w-3.5 text-blue-400" /> Vergi, SGK ve kuruluş
+          </a>
+          <a href="#lead-form" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 transition hover:text-slate-200">
+            <FileDown className="h-3.5 w-3.5 text-teal-400" /> Kuruluş checklist’i
+          </a>
+          <a href="#hukuk-danismanligi" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 transition hover:text-slate-200">
+            <Scale className="h-3.5 w-3.5 text-indigo-400" /> Hukuk ve uyum notları
+          </a>
+          <a href="/e-ticaret-vergi" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-slate-400 transition hover:text-slate-200">
+            <Store className="h-3.5 w-3.5 text-teal-400" /> E-ticaret vergi rehberi
           </a>
         </div>
       </section>

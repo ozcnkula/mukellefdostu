@@ -172,8 +172,6 @@ export default function TaxCalculator() {
   const [used, setUsed] = useState(false);
   const reportedUse = useRef(false);
   const [notice, setNotice] = useState("");
-  const [quote, setQuote] = useState({ name: "", phone: "", email: "" });
-  const [quoteState, setQuoteState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [match, setMatch] = useState({ name: "", contact: "", focus: "" as "" | MatchFocus, consent: false });
   const [matchState, setMatchState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [matchError, setMatchError] = useState("");
@@ -259,28 +257,6 @@ export default function TaxCalculator() {
       field.remove();
     }
     rememberShare();
-  };
-
-  const sendQuote = async (event: FormEvent) => {
-    event.preventDefault();
-    setQuoteState("sending");
-    setUsed(true);
-    try {
-      const response = await fetch("/api/teklif", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...quote,
-          profit,
-          advantage: gap,
-          distribution,
-          winner: senaryo,
-        }),
-      });
-      setQuoteState(response.ok ? "sent" : "error");
-    } catch {
-      setQuoteState("error");
-    }
   };
 
   const sendMatch = async (event: FormEvent) => {
@@ -450,63 +426,6 @@ export default function TaxCalculator() {
           </p>
         ) : null}
 
-        <form onSubmit={sendQuote} className="space-y-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:p-5">
-          <div>
-            <h4 className="font-semibold text-white">Bu hesaplama için uzman desteği al</h4>
-            <p className="mt-1 text-xs text-slate-400">Teklif isteyin. Yıllık kâr, senaryo ve avantaj tutarı da iletilir.</p>
-          </div>
-          {quoteState === "sent" ? (
-            <p className="rounded-lg border border-emerald-800 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200">
-              Talebiniz alındı. En kısa sürede sizi arayacağız.
-            </p>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <label className="block text-xs text-slate-400">
-                  Ad
-                  <input
-                    required
-                    autoComplete="name"
-                    value={quote.name}
-                    onChange={(event) => setQuote({ ...quote, name: event.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
-                  />
-                </label>
-                <label className="block text-xs text-slate-400">
-                  Telefon
-                  <input
-                    required
-                    type="tel"
-                    autoComplete="tel"
-                    value={quote.phone}
-                    onChange={(event) => setQuote({ ...quote, phone: event.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
-                  />
-                </label>
-                <label className="block text-xs text-slate-400">
-                  E-posta
-                  <input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    value={quote.email}
-                    onChange={(event) => setQuote({ ...quote, email: event.target.value })}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
-                  />
-                </label>
-              </div>
-              {quoteState === "error" ? <p className="text-sm text-red-400">Talep gönderilemedi. Lütfen tekrar deneyin.</p> : null}
-              <button
-                type="submit"
-                disabled={quoteState === "sending"}
-                className="w-full rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-60 sm:w-auto sm:px-6"
-              >
-                {quoteState === "sending" ? "Gönderiliyor" : "Teklif iste"}
-              </button>
-            </>
-          )}
-        </form>
-
         <p className="text-[11px] leading-relaxed text-slate-500">
           Simülasyondur, bağlayıcı vergi hesabı değildir. Şahıs tarafında 2026 ücret dışı gelir tarifesi kullanılır
           (190.000 TL’ye kadar %15, 400.000 TL’ye kadar %20, 1.000.000 TL’ye kadar %27, 5.300.000 TL’ye kadar %35, fazlası %40).
@@ -599,6 +518,12 @@ export default function TaxCalculator() {
               </button>
             </>
           )}
+          <p className="text-xs leading-relaxed text-slate-400">
+            <a href="#lead-form" className="text-teal-300 underline decoration-teal-500/40 underline-offset-2">Kuruluş checklist’i</a>
+            {" "}ve{" "}
+            <a href="#lead-form" className="text-teal-300 underline decoration-teal-500/40 underline-offset-2">genel ön görüşme</a>
+            {" "}için alttaki forma geçin.
+          </p>
         </form>
       </div>
     </div>
