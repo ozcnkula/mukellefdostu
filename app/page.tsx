@@ -9,6 +9,7 @@ import AiAssistant from "@/components/AiAssistant";
 import LegalConsulting from "@/components/LegalConsulting";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { InstagramShowcase } from "@/components/InstagramShowcase";
 import {
   Building2,
   ShoppingCart,
@@ -283,6 +284,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <InstagramShowcase />
 
       <SiteFooter />
     </main>
